@@ -13,3 +13,92 @@
     <script src="script.js"></script>
   </body>
 </html>
+<?php
+// Get the long and short URLs from the POST request
+$longURL = $_POST["longURL"];
+$shortURL = $_POST["shortURL"];
+
+// Connect to the MySQL database
+$servername = "localhost";
+$username = "your_username";
+$password = "your_password";
+$dbname = "your_dbname";
+
+// Create a connection object
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// Check the connection status
+if ($conn->connect_error) {
+  die("Connection failed: " . $conn->connect_error);
+}
+
+// Prepare a SQL statement to insert the long and short URLs into the table
+$sql = "INSERT INTO urls (longURL, shortURL) VALUES (?, ?)";
+
+// Create a prepared statement
+$stmt = $conn->prepare($sql);
+
+// Bind the parameters to the statement
+$stmt->bind_param("ss", $longURL, $shortURL);
+
+// Execute the statement
+$stmt->execute();
+
+// Close the statement and the connection
+$stmt->close();
+$conn->close();
+?>
+<?php
+// Get the honeypot form field value from the POST request
+$honeypot = $_POST["honeypot"];
+
+// Check if the honeypot form field is filled
+if ($honeypot) {
+  // Block the bot user
+  die("You are a bot!");
+}
+
+// Get the mouse movement data from the POST request
+$mouseData = $_POST["mouseData"];
+
+// Define a threshold for the mouse movement speed
+$mouseSpeedThreshold = 10;
+
+// Calculate the average mouse movement speed
+$mouseSpeedSum = 0;
+$mouseSpeedCount = 0;
+foreach ($mouseData as $mouseEvent) {
+  // Get the mouse coordinates and timestamp
+  $mouseX = $mouseEvent["x"];
+  $mouseY = $mouseEvent["y"];
+  $mouseTime = $mouseEvent["time"];
+
+  // Get the previous mouse coordinates and timestamp
+  $prevMouseX = $prevMouseEvent["x"];
+  $prevMouseY = $prevMouseEvent["y"];
+  $prevMouseTime = $prevMouseEvent["time"];
+
+  // Calculate the mouse movement distance and time
+  $mouseDistance = sqrt(pow($mouseX - $prevMouseX, 2) + pow($mouseY - $prevMouseY, 2));
+  $mouseTimeDiff = $mouseTime - $prevMouseTime;
+
+  // Calculate the mouse movement speed
+  $mouseSpeed = $mouseDistance / $mouseTimeDiff;
+
+  // Add the mouse speed to the sum and increment the count
+  $mouseSpeedSum += $mouseSpeed;
+  $mouseSpeedCount++;
+}
+
+// Calculate the average mouse speed
+$mouseSpeedAverage = $mouseSpeedSum / $mouseSpeedCount;
+
+// Check if the average mouse speed is above the threshold
+if ($mouseSpeedAverage > $mouseSpeedThreshold) {
+  // Block the bot user
+  die("You are a bot!");
+}
+
+// Allow the human user to access the website
+echo "You are human! You can access the website now.";
+?>
